@@ -1,0 +1,79 @@
+{
+  "name": "hjyup-flags",
+  "version": "0.0.0-development",
+  "description": "Feature flags with a simple API",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "prepare": "pnpm run build",
+    "test": "jest",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "semantic-release": "semantic-release"
+  },
+  "type": "module",
+  "keywords": [
+    "feature-flags",
+    "feature-toggles",
+    "flags",
+    "typescript"
+  ],
+  "author": "HJyup",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HJyup/hjyup-flags.git"
+  },
+  "bugs": {
+    "url": "https://github.com/HJyup/hjyup-flags/issues"
+  },
+  "homepage": "https://github.com/HJyup/hjyup-flags#readme",
+  "devDependencies": {
+    "@eslint/js": "^9.19.0",
+    "@rollup/plugin-commonjs": "^28.0.2",
+    "@rollup/plugin-node-resolve": "^16.0.0",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.12.0",
+    "@typescript-eslint/eslint-plugin": "^8.22.0",
+    "@typescript-eslint/parser": "^8.22.0",
+    "eslint": "^9.19.0",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-prettier": "^5.2.3",
+    "eslint-plugin-react": "^7.37.4",
+    "globals": "^15.14.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.4.2",
+    "rollup": "^4.32.1",
+    "rollup-plugin-dts": "^6.1.1",
+    "semantic-release": "^24.2.1",
+    "ts-jest": "^29.2.5",
+    "ts-node": "^10.9.2",
+    "tslib": "^2.8.1",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.22.0"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node",
+    "moduleFileExtensions": [
+      "ts",
+      "js"
+    ],
+    "testMatch": [
+      "**/__tests__/**/*.test.ts"
+    ]
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
