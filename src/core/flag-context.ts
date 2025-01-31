@@ -1,10 +1,6 @@
-import {
-  FeatureFlagContextData,
-  FeatureFlagContextProvider,
-  hash,
-} from '../utils';
+import { FeatureFlagContextData, FeatureFlagContextProvider } from '../utils';
 
-export class FeatureFlagContext implements FeatureFlagContextProvider {
+class FeatureFlagContext implements FeatureFlagContextProvider {
   private context: FeatureFlagContextData;
 
   /**
@@ -13,9 +9,9 @@ export class FeatureFlagContext implements FeatureFlagContextProvider {
    */
   constructor(initialContext: Partial<FeatureFlagContextData> = {}) {
     this.context = {
-      userRole: initialContext.userRole ?? null,
-      environment: initialContext.environment ?? null,
-      region: initialContext.region ?? null,
+      userRole: initialContext.userRole ?? undefined,
+      environment: initialContext.environment ?? undefined,
+      region: initialContext.region ?? undefined,
       percentage: initialContext.percentage ?? undefined,
     };
   }
@@ -34,20 +30,6 @@ export class FeatureFlagContext implements FeatureFlagContextProvider {
   getContext(): Readonly<FeatureFlagContextData> {
     return this.context;
   }
-
-  /**
-   * Checks if a feature should be enabled based on percentage rollout.
-   * @param featureName - Name of the feature to check.
-   * @param userId - Unique user ID to determine rollout eligibility.
-   * @returns boolean indicating if the feature should be enabled.
-   */
-  isFeatureEnabledForPercentage(featureName: string, userId: string): boolean {
-    const percentage = this.context.percentage;
-
-    if (typeof percentage !== 'number' || percentage < 0 || percentage > 100) {
-      return false;
-    }
-
-    return hash(`${featureName}:${userId}`) < percentage;
-  }
 }
+
+export { FeatureFlagContext };

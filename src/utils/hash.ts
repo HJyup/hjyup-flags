@@ -14,7 +14,7 @@ function hash(input: string): number {
     hash = hash & hash;
   }
 
-  return Math.abs(hash) % 100;
+  return Math.abs(hash);
 }
 
 export { hash };

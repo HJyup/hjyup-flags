@@ -1,2 +1,2 @@
-export * from './feature-flag';
+export * from './feature-flags';
 export * from './flag-context';
