@@ -1,14 +1,22 @@
-# hjyup-flags
+# **hjyup-flags**  
 
-A modern, lightweight, and type-safe feature flag management library for controlled feature rollouts in TypeScript applications.
+A modern, lightweight, and type-safe feature flag management library for controlled feature rollouts in TypeScript applications.  
 
-## Overview
+---
 
-`hjyup-flags` provides an elegant and efficient way to manage feature flags in your TypeScript applications. Whether you need simple on/off toggles, percentage-based rollouts, or dynamic context-aware flags, this library has you covered—all with zero dependencies and full TypeScript support.
+## **🚀 Overview**  
 
-## Installation
+`hjyup-flags` provides an elegant and efficient way to manage feature flags in your TypeScript applications.  
+- ✅ **Simple Boolean Flags** – Enable/disable features easily.  
+- ✅ **Context-Aware Flags** – Activate features based on environment, user role, or region.  
+- ✅ **Percentage-Based Rollouts** – Gradually enable features for a subset of users.  
+- ✅ **Zero Dependencies** – Fully TypeScript-native and lightweight.  
 
-Install the package using your preferred package manager:
+---
+
+## **📦 Installation**  
+
+Install the package using your preferred package manager:  
 
 ```sh
 npm install hjyup-flags
@@ -22,131 +30,81 @@ pnpm add hjyup-flags
 
 ### Creating Feature Flags
 
-The core functionality of `hjyup-flags` revolves around the `FeatureFlag` class. Here’s how you can use it:
+Feature flags are initialized using the FeatureFlags class
 
 #### Basic Feature Flag
 
 ```ts
-import { FeatureFlag } from 'hjyup-flags';
+import { FeatureFlags } from 'hjyup-flags';
 
-const flag = new FeatureFlag({
-  name: 'new-header',
-  defaultValue: true,
+const featureFlags = new FeatureFlags({
+  'new-dashboard': { defaultValue: true },
 });
 
-if (flag.getValue()) {
-  // Show new header
+if (featureFlags.isEnabled('new-dashboard')) {
+  console.log('✅ New dashboard is enabled!');
 }
 ```
 
 #### Context-Based Feature Flag
 
-Feature flags can be dynamically evaluated based on context:
+Feature flags can be evaluated based on user roles, environment, or region.
 
 ```ts
-const flag = new FeatureFlag({
-  name: 'beta-feature',
-  defaultValue: (context) => context.userRole === 'admin',
-  context: {
-    userRole: 'admin',
-    environment: 'staging',
+const featureFlags = new FeatureFlags({
+  'beta-feature': {
+    defaultValue: false,
+    context: { environment: 'staging', userRole: 'admin' },
   },
 });
 
-if (flag.getValue()) {
-  // Feature is enabled for admins in staging
+const userContext = { userRole: 'admin', environment: 'staging' };
+
+if (featureFlags.isEnabled('beta-feature', userContext)) {
+  console.log('🚀 Feature enabled for Admins in Staging.');
 }
 ```
 
 #### Percentage-Based Rollout
 
-Gradually enable features for a subset of users:
+Enable features gradually for a subset of users using a hashed percentage-based rollout.
 
 ```ts
-const flag = new FeatureFlag({
-  name: 'new-ui',
-  context: {
-    percentage: 50, // Enable for 50% of users
+const featureFlags = new FeatureFlags({
+  'new-ui': {
+    defaultValue: false,
+    context: { percentage: 50 }, // Enable for 50% of users
   },
 });
 
-if (flag.getValue('user-123')) {
-  // Show new UI
+const userId = 'user-123';
+
+if (featureFlags.isEnabled('new-ui', { userId })) {
+  console.log('🎉 User has access to the new UI!');
 }
-```
-
-### Persistent Feature Flags with Local Storage
-
-Store and retrieve feature flags using local storage:
-
-```ts
-import { LocalStorageWrapper, FeatureFlag } from 'hjyup-flags';
-
-const flag = new FeatureFlag({
-  name: 'persistent-flag',
-  defaultValue: true,
-});
-
-const storage = new LocalStorageWrapper({
-  'persistent-flag': flag,
-});
-
-const savedFlag = storage.getItem('persistent-flag');
-```
-
-### Dynamically Updating Feature Flags
-
-Modify feature flags in real-time:
-
-```ts
-const flag = new FeatureFlag({
-  name: 'dynamic-feature',
-  defaultValue: false,
-});
-
-flag.setValue(true);
-
-flag.context.updateContext({
-  environment: 'production',
-  percentage: 25,
-});
 ```
 
 ## API Reference
 
-### `FeatureFlag` Class
+### FeatureFlags Class
 
 #### Constructor
 
 ```ts
-new FeatureFlag({
-  name: string;
-  defaultValue?: boolean | ((context: FeatureFlagContextData) => boolean);
-  context?: FeatureFlagContextData;
-})
+new FeatureFlags<T extends Record<string, FeatureFlagValue>>(flags: T)
 ```
 
-#### Methods
+## 🔹 Feature Flag API Methods
 
-- `getValue(userId?: string): boolean` – Returns the flag value, optionally for a specific user.
-- `setValue(value: boolean): void` – Updates the flag’s value dynamically.
-
-### `FeatureFlagContext` Class
-
-#### Constructor
-
-```ts
-new FeatureFlagContext({
-  userRole?: string;
-  environment?: string;
-  region?: string;
-  percentage?: number;
-})
-```
-
-#### Methods
-
-- `updateContext(newContext: Partial<FeatureFlagContextData>): void` – Updates the feature flag context dynamically.
+| **Method** | **Description** |
+|------------|----------------|
+| `isEnabled(flagName, userContext?)`  | **Checks if a feature is enabled.** Optionally provide a `userContext` for contextual evaluation. |
+| `getFlag(flagName)` | **Retrieves a feature flag’s value.** Returns `null` if the flag does not exist. |
+| `updateFlag(flagName, value)` | **Updates a feature flag dynamically.** Use this to change flag values at runtime. |
+| `deleteFlag(flagName)` | **Deletes a feature flag.** Removes the flag from the list of active flags. |
+| `listFlags()` | **Lists all available feature flags.** Returns a `readonly` object containing all flag definitions. |
+| `setGlobalContext(context)` | **Sets a global context for all feature evaluations.** This affects all `isEnabled` calls unless overridden by `userContext`. |
+| `getGlobalContext()` | **Retrieves the current global context.** Useful for debugging and ensuring correct context settings. |
 
 ## Contributing
 
