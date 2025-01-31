@@ -4,6 +4,7 @@ import {
   FeatureFlagContextData,
   Nullable,
   hash,
+  UserContextData,
 } from '../utils';
 
 class FeatureFlags<T extends string> implements IFeatureFlags<T> {
@@ -74,7 +75,7 @@ class FeatureFlags<T extends string> implements IFeatureFlags<T> {
    * @param userContext - Optional user-specific context
    * @returns Boolean indicating if feature is enabled
    */
-  isEnabled(flagName: T, userContext?: FeatureFlagContextData): boolean {
+  isEnabled(flagName: T, userContext?: UserContextData): boolean {
     const flag = this.getFlag(flagName);
     if (!flag) {
       console.warn(`[FeatureFlags] Flag "${String(flagName)}" not found.`);
@@ -86,11 +87,14 @@ class FeatureFlags<T extends string> implements IFeatureFlags<T> {
       ...userContext,
     };
 
+    // First, evaluate if the context matches
     if (!this.evaluateContext(flag.context, context)) return false;
 
+    // Then, evaluate the percentage-based rollout
     const isPercentageMatch = this.evaluatePercentage(flag, context, flagName);
     if (isPercentageMatch !== null) return isPercentageMatch;
 
+    // If no specific conditions apply, return the default value
     return flag.defaultValue;
   }
 
@@ -105,6 +109,7 @@ class FeatureFlags<T extends string> implements IFeatureFlags<T> {
     context: FeatureFlagContextData
   ): boolean {
     for (const [key, value] of Object.entries(flagContext ?? {})) {
+      if (key === 'percentage') continue;
       if (value !== undefined && context[key] !== value) {
         return false;
       }
