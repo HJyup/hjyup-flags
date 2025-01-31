@@ -6,7 +6,7 @@ import {
 } from '../utils';
 import { FeatureFlagContext } from './flag-context';
 
-interface FeatueFlagProps {
+interface FeatureFlagProps {
   name: string;
   defaultValue?: FeatureFlagValue;
   context?: FeatureFlagContextData;
@@ -14,7 +14,7 @@ interface FeatueFlagProps {
 
 class FeatureFlag implements IFeatureFlag {
   public readonly name: string;
-  private defaultValue: FeatureFlagValue;
+  public defaultValue: FeatureFlagValue;
   public readonly context: FeatureFlagContextProvider;
 
   /**
@@ -23,7 +23,7 @@ class FeatureFlag implements IFeatureFlag {
    * @param value - Initial value or function-based evaluation.
    * @param contextData - Context data as JSON for evaluation.
    */
-  constructor(options: FeatueFlagProps) {
+  constructor(options: FeatureFlagProps) {
     this.name = options.name;
     this.defaultValue = options.defaultValue || false;
     this.context = new FeatureFlagContext(options.context);
@@ -34,6 +34,11 @@ class FeatureFlag implements IFeatureFlag {
    * @param value - Boolean value or function determining the flag's state.
    */
   setValue(value: FeatureFlagValue) {
+    if (typeof value !== 'boolean' && typeof value !== 'function') {
+      throw new Error(
+        `Invalid FeatureFlagValue for ${this.name}: Expected boolean or function.`
+      );
+    }
     this.defaultValue = value;
   }
 
@@ -57,14 +62,7 @@ class FeatureFlag implements IFeatureFlag {
       return this.defaultValue(context);
     }
 
-    if (
-      context.environment === 'production' &&
-      this.defaultValue === undefined
-    ) {
-      return false;
-    }
-
-    return this.defaultValue ?? false;
+    return this.defaultValue;
   }
 }
 
