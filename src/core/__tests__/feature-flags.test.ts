@@ -140,6 +140,26 @@ describe('FeatureFlags', () => {
       });
     });
 
+    it('should properly handle different percentage rollouts', () => {
+      featureFlags.updateFlag('rollout-flag', {
+        defaultValue: false,
+        context: { percentage: 0 },
+      });
+      expect(featureFlags.isEnabled('rollout-flag', { userId: 'test-user' })).toBe(false);
+
+      featureFlags.updateFlag('rollout-flag', {
+        defaultValue: false,
+        context: { percentage: 100 },
+      });
+      expect(featureFlags.isEnabled('rollout-flag', { userId: 'test-user' })).toBe(true);
+
+      featureFlags.updateFlag('rollout-flag', {
+        defaultValue: true,
+        context: { percentage: 50 },
+      });
+      expect(featureFlags.isEnabled('rollout-flag', {})).toBe(true);
+    });
+
     it('should use default value when no context conditions apply', () => {
       expect(featureFlags.isEnabled('default-flag', {})).toBe(true);
 

@@ -26,6 +26,14 @@ export interface FeatureFlagContextData {
   [key: string]: string | number | boolean | undefined;
 }
 
+export interface UserContextData {
+  userId?: string;
+  userRole?: string;
+  environment?: string;
+  region?: string;
+  [key: string]: string | number | boolean | undefined;
+}
+
 /**
  * Provider interface for accessing feature flag context
  */
@@ -53,6 +61,6 @@ export interface IFeatureFlags<T extends string> {
 
   isEnabled(flagName: T, userContext: FeatureFlagContextData): boolean;
 
-  setGlobalContext(context: FeatureFlagContextData): void;
-  getGlobalContext(): FeatureFlagContextData;
+  setGlobalContext(context: UserContextData): void;
+  getGlobalContext(): UserContextData;
 }
