@@ -45,16 +45,13 @@ export interface FeatureFlagValue {
  * Core feature flag management interface
  * Handles retrieval, evaluation and updates of feature flags
  */
-export interface IFeatureFlags<T extends Record<string, FeatureFlagValue>> {
-  getFlag<K extends keyof T>(flagName: K): Nullable<T[K]>;
-  listFlags(): Readonly<T>;
-  updateFlag(flagName: keyof T, value: T[keyof T]): void;
-  deleteFlag(flagName: keyof T): void;
+export interface IFeatureFlags<T extends string> {
+  getFlag(flagName: T): Nullable<FeatureFlagValue>;
+  listFlags(): Readonly<Record<T, FeatureFlagValue>>;
+  updateFlag(flagName: T, value: FeatureFlagValue): void;
+  deleteFlag(flagName: T): void;
 
-  isEnabled<K extends keyof T>(
-    flagName: K,
-    userContext: FeatureFlagContextData
-  ): boolean;
+  isEnabled(flagName: T, userContext: FeatureFlagContextData): boolean;
 
   setGlobalContext(context: FeatureFlagContextData): void;
   getGlobalContext(): FeatureFlagContextData;
