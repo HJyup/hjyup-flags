@@ -4,20 +4,17 @@ import {
   FeatureFlagContextData,
   Nullable,
   hash,
-  FeatureFlagNames,
 } from '../utils';
 
-class FeatureFlags<T extends Record<string, FeatureFlagValue>>
-  implements IFeatureFlags<T>
-{
-  private readonly flags: T;
+class FeatureFlags<T extends string> implements IFeatureFlags<T> {
+  private readonly flags: Record<T, FeatureFlagValue>;
   private globalContext?: FeatureFlagContextData;
 
   /**
    * Initializes feature flags with provided flag definitions
    * @param flags - Initial feature flag definitions
    */
-  constructor(flags: T) {
+  constructor(flags: Record<T, FeatureFlagValue>) {
     this.flags = { ...flags };
   }
 
@@ -26,7 +23,7 @@ class FeatureFlags<T extends Record<string, FeatureFlagValue>>
    * @param flagName - Name of the flag to retrieve
    * @returns The flag value or null if not found
    */
-  getFlag<K extends keyof T>(flagName: K): Nullable<T[K]> {
+  getFlag(flagName: T): Nullable<FeatureFlagValue> {
     return this.flags[flagName] ?? null;
   }
 
@@ -34,7 +31,7 @@ class FeatureFlags<T extends Record<string, FeatureFlagValue>>
    * Lists all feature flags
    * @returns Readonly copy of all flags
    */
-  listFlags(): Readonly<T> {
+  listFlags(): Readonly<Record<T, FeatureFlagValue>> {
     return this.flags;
   }
 
@@ -43,7 +40,7 @@ class FeatureFlags<T extends Record<string, FeatureFlagValue>>
    * @param flagName - Name of the flag to update
    * @param value - New flag value
    */
-  updateFlag<K extends keyof T>(flagName: K, value: T[K]): void {
+  updateFlag(flagName: T, value: FeatureFlagValue): void {
     this.flags[flagName] = value;
   }
 
@@ -51,7 +48,7 @@ class FeatureFlags<T extends Record<string, FeatureFlagValue>>
    * Deletes a feature flag
    * @param flagName - Name of the flag to delete
    */
-  deleteFlag<K extends keyof T>(flagName: K): void {
+  deleteFlag(flagName: T): void {
     delete this.flags[flagName];
   }
 
@@ -77,10 +74,7 @@ class FeatureFlags<T extends Record<string, FeatureFlagValue>>
    * @param userContext - Optional user-specific context
    * @returns Boolean indicating if feature is enabled
    */
-  isEnabled<K extends keyof T>(
-    flagName: K,
-    userContext?: FeatureFlagContextData
-  ): boolean {
+  isEnabled(flagName: T, userContext?: FeatureFlagContextData): boolean {
     const flag = this.getFlag(flagName);
     if (!flag) {
       console.warn(`[FeatureFlags] Flag "${String(flagName)}" not found.`);
@@ -128,7 +122,7 @@ class FeatureFlags<T extends Record<string, FeatureFlagValue>>
   private evaluatePercentage(
     flag: FeatureFlagValue,
     context: FeatureFlagContextData,
-    flagName: FeatureFlagNames<T>
+    flagName: T
   ): boolean | null {
     if (flag.context?.percentage !== undefined && context.userId) {
       return (
@@ -145,10 +139,7 @@ class FeatureFlags<T extends Record<string, FeatureFlagValue>>
    * @param flagName - Name of the flag
    * @returns Number between 0-99 representing user's bucket
    */
-  private assignUserToBucket(
-    userId: string,
-    flagName: FeatureFlagNames<T>
-  ): number {
+  private assignUserToBucket(userId: string, flagName: T): number {
     return hash(userId + String(flagName)) % 100;
   }
 }
