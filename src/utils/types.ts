@@ -21,7 +21,7 @@ export type FeatureFlagValue =
 export interface IFeatureFlag {
   name: string;
   context: FeatureFlagContextProvider;
-
+  defaultValue: FeatureFlagValue;
   getValue(userId?: string): boolean;
   setValue(value: FeatureFlagValue): void;
 }

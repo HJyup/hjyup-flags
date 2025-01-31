@@ -1,3 +1,4 @@
+import { FeatureFlag } from '../core';
 import { IFeatureFlag } from '../utils';
 
 class LocalStorageWrapper {
@@ -12,8 +13,14 @@ class LocalStorageWrapper {
     const existingData = localStorage.getItem(this.storageKey);
     const existingFlags = existingData ? JSON.parse(existingData) : {};
 
+    const flagsToStore: Record<string, IFeatureFlag> = {};
+
+    Object.values(initialFlags).forEach(flag => {
+      flagsToStore[flag.name] = flag;
+    });
+
     const mergedFlags = {
-      ...initialFlags,
+      ...flagsToStore,
       ...existingFlags,
     };
 
@@ -29,8 +36,14 @@ class LocalStorageWrapper {
     const storageData = localStorage.getItem(this.storageKey);
     if (!storageData) return null;
 
-    const flags = JSON.parse(storageData) as Record<string, IFeatureFlag>;
-    return flags[key] ?? null;
+    const flags = JSON.parse(storageData);
+    if (!flags[key]) return null;
+
+    return new FeatureFlag({
+      name: key,
+      defaultValue: flags[key].defaultValue,
+      context: flags[key].context,
+    });
   }
 
   /**
@@ -42,7 +55,15 @@ class LocalStorageWrapper {
     const storageData = localStorage.getItem(this.storageKey);
     const flags = storageData ? JSON.parse(storageData) : {};
 
-    flags[key] = value;
+    flags[key] = {
+      name: value.name,
+      defaultValue:
+        typeof value.defaultValue === 'function'
+          ? undefined
+          : value.defaultValue,
+      context: value.context.getContext(),
+    };
+
     localStorage.setItem(this.storageKey, JSON.stringify(flags));
   }
 

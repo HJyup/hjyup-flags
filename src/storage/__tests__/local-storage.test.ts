@@ -47,7 +47,11 @@ describe('LocalStorageWrapper', () => {
       const newStorage = new LocalStorageWrapper();
 
       const retrievedFlag = newStorage.getItem('test-flag');
-      expect(retrievedFlag).toEqual(mockFeatureFlag);
+      expect(retrievedFlag?.name).toEqual(mockFeatureFlag.name);
+      expect(retrievedFlag?.defaultValue).toEqual(mockFeatureFlag.defaultValue);
+      expect(retrievedFlag?.context.getContext()).toEqual(
+        mockFeatureFlag.context.getContext()
+      );
 
       newStorage.clear();
       expect(localStorage.getItem('feature-flags')).toBeNull();
@@ -56,17 +60,39 @@ describe('LocalStorageWrapper', () => {
     it('should merge initial flags with existing storage', () => {
       storage.setItem('test-flag', mockFeatureFlag);
 
-      const anotherFlag: IFeatureFlag = {
-        ...mockFeatureFlag,
+      const anotherFlag: IFeatureFlag = new FeatureFlag({
         name: 'another-flag',
-      };
-
-      const newStorage = new LocalStorageWrapper({
-        'another-flag': anotherFlag,
+        defaultValue: true,
+        context: {
+          userRole: null,
+          environment: null,
+          region: null,
+          percentage: undefined,
+        },
       });
 
-      expect(newStorage.getItem('test-flag')).toEqual(mockFeatureFlag);
-      expect(newStorage.getItem('another-flag')).toEqual(anotherFlag);
+      const newStorage = new LocalStorageWrapper({
+        anotherFlag,
+      });
+
+      const retrievedTestFlag = newStorage.getItem('test-flag');
+      const retrievedAnotherFlag = newStorage.getItem('another-flag');
+
+      expect(retrievedTestFlag?.name).toEqual(mockFeatureFlag.name);
+      expect(retrievedTestFlag?.defaultValue).toEqual(
+        mockFeatureFlag.defaultValue
+      );
+      expect(retrievedTestFlag?.context.getContext()).toEqual(
+        mockFeatureFlag.context.getContext()
+      );
+
+      expect(retrievedAnotherFlag?.name).toEqual(anotherFlag.name);
+      expect(retrievedAnotherFlag?.defaultValue).toEqual(
+        anotherFlag.defaultValue
+      );
+      expect(retrievedAnotherFlag?.context.getContext()).toEqual(
+        anotherFlag.context.getContext()
+      );
 
       newStorage.clear();
       expect(localStorage.getItem('feature-flags')).toBeNull();
@@ -80,7 +106,13 @@ describe('LocalStorageWrapper', () => {
         localStorage.getItem('feature-flags') || '{}'
       );
 
-      expect(storedData['test-flag']).toEqual(mockFeatureFlag);
+      expect(storedData['test-flag'].name).toEqual(mockFeatureFlag.name);
+      expect(storedData['test-flag'].defaultValue).toEqual(
+        mockFeatureFlag.defaultValue
+      );
+      expect(storedData['test-flag'].context).toEqual(
+        mockFeatureFlag.context.getContext()
+      );
     });
 
     it('should preserve existing flags when adding new ones', () => {
@@ -96,8 +128,21 @@ describe('LocalStorageWrapper', () => {
         localStorage.getItem('feature-flags') || '{}'
       );
 
-      expect(storedData['test-flag']).toEqual(mockFeatureFlag);
-      expect(storedData['another-flag']).toEqual(anotherFlag);
+      expect(storedData['test-flag'].name).toEqual(mockFeatureFlag.name);
+      expect(storedData['test-flag'].defaultValue).toEqual(
+        mockFeatureFlag.defaultValue
+      );
+      expect(storedData['test-flag'].context).toEqual(
+        mockFeatureFlag.context.getContext()
+      );
+
+      expect(storedData['another-flag'].name).toEqual(anotherFlag.name);
+      expect(storedData['another-flag'].defaultValue).toEqual(
+        anotherFlag.defaultValue
+      );
+      expect(storedData['another-flag'].context).toEqual(
+        anotherFlag.context.getContext()
+      );
     });
   });
 

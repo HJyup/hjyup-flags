@@ -44,7 +44,7 @@ export class FeatureFlagContext implements FeatureFlagContextProvider {
   isFeatureEnabledForPercentage(featureName: string, userId: string): boolean {
     const percentage = this.context.percentage;
 
-    if (percentage === undefined || percentage < 0 || percentage > 100) {
+    if (typeof percentage !== 'number' || percentage < 0 || percentage > 100) {
       return false;
     }
 
