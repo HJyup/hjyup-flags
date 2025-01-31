@@ -70,16 +70,12 @@ describe('FeatureFlag', () => {
     });
 
     it('should return false for non-existent flag', () => {
-      expect(flag.isFeatureEnabled('non-existent')).toBe(false);
+      expect(flag.isEnabled('non-existent')).toBe(false);
     });
 
     it('should evaluate context conditions', () => {
-      expect(flag.isFeatureEnabled('test-flag', { userRole: 'admin' })).toBe(
-        true
-      );
-      expect(flag.isFeatureEnabled('test-flag', { userRole: 'user' })).toBe(
-        false
-      );
+      expect(flag.isEnabled('test-flag', { userRole: 'admin' })).toBe(true);
+      expect(flag.isEnabled('test-flag', { userRole: 'user' })).toBe(false);
     });
 
     it('should handle percentage rollout', () => {
@@ -90,17 +86,17 @@ describe('FeatureFlag', () => {
         },
       });
 
-      const result1 = flag.isFeatureEnabled('rollout-flag', {
+      const result1 = flag.isEnabled('rollout-flag', {
         userId: 'user-1',
       });
-      const result2 = flag.isFeatureEnabled('rollout-flag', {
+      const result2 = flag.isEnabled('rollout-flag', {
         userId: 'user-2',
       });
 
-      expect(flag.isFeatureEnabled('rollout-flag', { userId: 'user-1' })).toBe(
+      expect(flag.isEnabled('rollout-flag', { userId: 'user-1' })).toBe(
         result1
       );
-      expect(flag.isFeatureEnabled('rollout-flag', { userId: 'user-2' })).toBe(
+      expect(flag.isEnabled('rollout-flag', { userId: 'user-2' })).toBe(
         result2
       );
     });
@@ -111,7 +107,7 @@ describe('FeatureFlag', () => {
         context: {},
       });
 
-      expect(flag.isFeatureEnabled('default-flag', {})).toBe(true);
+      expect(flag.isEnabled('default-flag', {})).toBe(true);
     });
   });
 
@@ -143,7 +139,7 @@ describe('FeatureFlag', () => {
         environment: 'staging',
       });
 
-      expect(flag.isFeatureEnabled('test-flag', {})).toBe(false);
+      expect(flag.isEnabled('test-flag', {})).toBe(false);
     });
   });
 });

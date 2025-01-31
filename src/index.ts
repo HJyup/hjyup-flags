@@ -1,2 +1,1 @@
-export { FeatureFlag, FeatureFlagContext } from './core';
-export { LocalStorageWrapper } from './storage';
+export { FeatureFlags, FeatureFlagContext } from './core';
