@@ -9,10 +9,10 @@ class FeatureFlagContext implements FeatureFlagContextProvider {
    */
   constructor(initialContext: Partial<FeatureFlagContextData> = {}) {
     this.context = {
-      userRole: initialContext.userRole ?? undefined,
-      environment: initialContext.environment ?? undefined,
-      region: initialContext.region ?? undefined,
-      percentage: initialContext.percentage ?? undefined,
+      userRole: initialContext.userRole,
+      environment: initialContext.environment,
+      region: initialContext.region,
+      percentage: initialContext.percentage,
     };
   }
 
