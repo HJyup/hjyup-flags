@@ -1,9 +1,4 @@
 /**
- * Supported deployment environments
- */
-export type Environment = 'development' | 'staging' | 'production';
-
-/**
  * Type helper for nullable values
  */
 export type Nullable<T> = T | null;
@@ -20,7 +15,7 @@ export type FeatureFlagNames<T extends Record<string, FeatureFlagValue>> =
 export interface FeatureFlagContextData {
   userId?: string;
   userRole?: string;
-  environment?: Environment;
+  environment?: string;
   region?: string;
   [key: string]: string | number | boolean | undefined;
 }
