@@ -15,21 +15,12 @@ export type FeatureFlagNames<T extends Record<string, FeatureFlagValue>> =
   keyof T;
 
 /**
- * Context data used for feature flag evaluation
+ * Base context data used for feature flag evaluation
  */
 export interface FeatureFlagContextData {
   userId?: string;
   userRole?: string;
-  environment?: string;
-  region?: string;
-  percentage?: number;
-  [key: string]: string | number | boolean | undefined;
-}
-
-export interface UserContextData {
-  userId?: string;
-  userRole?: string;
-  environment?: string;
+  environment?: Environment;
   region?: string;
   [key: string]: string | number | boolean | undefined;
 }
@@ -42,16 +33,33 @@ export interface FeatureFlagContextProvider {
 }
 
 /**
- * Configuration for an individual feature flag
+ * Configuration for an individual feature flag.
+ *
+ * - conditions: key-value pairs that define the context requirements (excluding percentage rollout)
+ * - rollout: optional percentage rollout configuration.
+ * - customEvaluator: optional function for more complex evaluation logic.
  */
 export interface FeatureFlagValue {
   defaultValue: boolean;
-  context: FeatureFlagContextData;
+  conditions?: Partial<FeatureFlagContextData>;
+  rollout?: {
+    percentage: number;
+  };
+  customEvaluator?: CustomEvaluator;
 }
 
 /**
- * Core feature flag management interface
- * Handles retrieval, evaluation and updates of feature flags
+ * Custom evaluator function for feature flags.
+ * Can be provided per-flag to override the default evaluation logic.
+ */
+export type CustomEvaluator = (
+  flag: FeatureFlagValue,
+  context: FeatureFlagContextData
+) => boolean;
+
+/**
+ * Core feature flag management interface.
+ * Handles retrieval, evaluation, and updates of feature flags.
  */
 export interface IFeatureFlags<T extends string> {
   getFlag(flagName: T): Nullable<FeatureFlagValue>;
@@ -61,6 +69,6 @@ export interface IFeatureFlags<T extends string> {
 
   isEnabled(flagName: T, userContext: FeatureFlagContextData): boolean;
 
-  setGlobalContext(context: UserContextData): void;
-  getGlobalContext(): UserContextData;
+  setGlobalContext(context: FeatureFlagContextData): void;
+  getGlobalContext(): FeatureFlagContextData;
 }

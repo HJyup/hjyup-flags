@@ -1,22 +1,24 @@
-# **hjyup-flags**  
+# **hjyup-flags**
 
-A modern, lightweight, and type-safe feature flag management library for controlled feature rollouts in TypeScript applications.  
-
----
-
-## **🚀 Overview**  
-
-`hjyup-flags` provides an elegant and efficient way to manage feature flags in your TypeScript applications.  
-- ✅ **Simple Boolean Flags** – Enable/disable features easily.  
-- ✅ **Context-Aware Flags** – Activate features based on environment, user role, or region.  
-- ✅ **Percentage-Based Rollouts** – Gradually enable features for a subset of users.  
-- ✅ **Zero Dependencies** – Fully TypeScript-native and lightweight.  
+A lightweight, type-safe feature flag management library for controlled feature rollouts and context-aware flag evaluation in TypeScript applications.
 
 ---
 
-## **📦 Installation**  
+## **🚀 Overview**
 
-Install the package using your preferred package manager:  
+`hjyup-flags` provides an efficient way to manage feature flags in your TypeScript applications.
+
+- ✅ **Simple Boolean Flags** – Enable/disable features easily.
+- ✅ **Context-Aware Flags** – Activate features based on environment, user role, region, or any custom criteria.
+- ✅ **Percentage-Based Rollouts** – Gradually enable features for a subset of users using deterministic bucketing.
+- ✅ **Custom Evaluators** – Override default evaluation with your own logic.
+- ✅ **Zero Dependencies** – Fully TypeScript-native and extremely lightweight.
+
+---
+
+## **📦 Installation**
+
+Install the package using your preferred package manager:
 
 ```sh
 npm install hjyup-flags
@@ -26,11 +28,13 @@ yarn add hjyup-flags
 pnpm add hjyup-flags
 ```
 
-## Usage
+---
+
+## **Usage**
 
 ### Creating Feature Flags
 
-Feature flags are initialized using the FeatureFlags class
+Feature flags are initialized using the `FeatureFlags` class.
 
 #### Basic Feature Flag
 
@@ -48,13 +52,13 @@ if (featureFlags.isEnabled('new-dashboard')) {
 
 #### Context-Based Feature Flag
 
-Feature flags can be evaluated based on user roles, environment, or region.
+Feature flags can be evaluated based on any context such as user roles, environment, or region.
 
 ```ts
 const featureFlags = new FeatureFlags({
   'beta-feature': {
     defaultValue: false,
-    context: { environment: 'staging', userRole: 'admin' },
+    conditions: { environment: 'staging', userRole: 'admin' },
   },
 });
 
@@ -73,7 +77,7 @@ Enable features gradually for a subset of users using a hashed percentage-based 
 const featureFlags = new FeatureFlags({
   'new-ui': {
     defaultValue: false,
-    context: { percentage: 50 }, // Enable for 50% of users
+    rollout: { percentage: 50 }, // Enable for 50% of users
   },
 });
 
@@ -84,32 +88,81 @@ if (featureFlags.isEnabled('new-ui', { userId })) {
 }
 ```
 
-## API Reference
+#### Custom Evaluator
 
-### FeatureFlags Class
-
-#### Constructor
+Override the default evaluation logic with a custom evaluator for even more flexibility.
 
 ```ts
-new FeatureFlags<T extends Record<string, FeatureFlagValue>>(flags: T)
+const featureFlags = new FeatureFlags({
+  'custom-flag': {
+    defaultValue: false,
+    rollout: { percentage: 40 },
+    customEvaluator: (flag, context) => {
+      // Example: Disable the flag for a particular region regardless of rollout.
+      if (context.region === 'restricted') return false;
+      // Evaluate percentage rollout
+      if (flag.rollout && context.userId) {
+        const bucket = featureFlags.assignUserToBucket(context.userId, 'custom-flag');
+        return bucket < flag.rollout.percentage;
+      }
+      return flag.defaultValue;
+    },
+  },
+});
+
+const userContext = { userId: 'user-456', region: 'eu-west' };
+
+if (featureFlags.isEnabled('custom-flag', userContext)) {
+  console.log('🚀 Custom flag active for this user.');
+}
 ```
 
-## 🔹 Feature Flag API Methods
+---
 
-| **Method** | **Description** |
-|------------|----------------|
-| `isEnabled(flagName, userContext?)`  | **Checks if a feature is enabled.** Optionally provide a `userContext` for contextual evaluation. |
-| `getFlag(flagName)` | **Retrieves a feature flag’s value.** Returns `null` if the flag does not exist. |
-| `updateFlag(flagName, value)` | **Updates a feature flag dynamically.** Use this to change flag values at runtime. |
-| `deleteFlag(flagName)` | **Deletes a feature flag.** Removes the flag from the list of active flags. |
-| `listFlags()` | **Lists all available feature flags.** Returns a `readonly` object containing all flag definitions. |
-| `setGlobalContext(context)` | **Sets a global context for all feature evaluations.** This affects all `isEnabled` calls unless overridden by `userContext`. |
-| `getGlobalContext()` | **Retrieves the current global context.** Useful for debugging and ensuring correct context settings. |
+## **API Reference**
 
-## Contributing
+### **FeatureFlags Class**
 
-Contributions are welcome! Feel free to submit a pull request or open an issue.
+#### **Constructor**
 
-## License
+```ts
+new FeatureFlags<T extends string>(flags: Record<T, FeatureFlagValue>)
+```
+
+Creates a new instance with the specified flag definitions.
+
+#### **Methods**
+
+| **Method**                           | **Description**                                                                                                      |
+|--------------------------------------|----------------------------------------------------------------------------------------------------------------------|
+| `isEnabled(flagName, userContext?)`  | Checks if a feature is enabled. Optionally provide a `userContext` for contextual evaluation.                         |
+| `getFlag(flagName)`                  | Retrieves a feature flag's configuration. Returns `null` if the flag does not exist.                                  |
+| `updateFlag(flagName, value)`        | Dynamically updates a feature flag at runtime.                                                                      |
+| `deleteFlag(flagName)`               | Deletes a feature flag, removing it from evaluation.                                                                |
+| `listFlags()`                        | Returns a read-only copy of all flag definitions.                                                                     |
+| `setGlobalContext(context)`          | Sets a global context for all feature evaluations. Global context is merged with individual user context.               |
+| `getGlobalContext()`                 | Retrieves the current global context used during flag evaluation.                                                     |
+
+### **Other Types**
+
+- **FeatureFlagValue**  
+  Represents an individual flag configuration.  
+  - `defaultValue`: The default boolean value for the flag.  
+  - `conditions` (optional): Key-value pairs used for direct context matching.  
+  - `rollout` (optional): An object specifying a roll-out percentage.  
+  - `customEvaluator` (optional): A function to override default evaluation logic.
+
+- **FeatureFlagContextData**  
+  Represents the context data for evaluating feature flags, such as `userRole`, `environment`, `region`, etc.
+
+---
+
+## **Contributing**
+
+Contributions are welcome! Please feel free to submit a pull request or open an issue if you encounter a bug or have a feature request.
+
+---
+
+## **License**
 
 [MIT License](https://choosealicense.com/licenses/mit/)

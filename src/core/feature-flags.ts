@@ -1,18 +1,18 @@
+// FeatureFlags.ts
 import {
   FeatureFlagValue,
   IFeatureFlags,
   FeatureFlagContextData,
   Nullable,
   hash,
-  UserContextData,
 } from '../utils';
 
 class FeatureFlags<T extends string> implements IFeatureFlags<T> {
   private readonly flags: Record<T, FeatureFlagValue>;
-  private globalContext?: FeatureFlagContextData;
+  private globalContext: FeatureFlagContextData = {};
 
   /**
-   * Initializes feature flags with provided flag definitions
+   * Initializes feature flags with provided flag definitions.
    * @param flags - Initial feature flag definitions
    */
   constructor(flags: Record<T, FeatureFlagValue>) {
@@ -20,95 +20,104 @@ class FeatureFlags<T extends string> implements IFeatureFlags<T> {
   }
 
   /**
-   * Retrieves a specific feature flag
-   * @param flagName - Name of the flag to retrieve
-   * @returns The flag value or null if not found
+   * Retrieves a specific feature flag.
+   * @param flagName - Name of the flag to retrieve.
+   * @returns The flag value or null if not found.
    */
   getFlag(flagName: T): Nullable<FeatureFlagValue> {
     return this.flags[flagName] ?? null;
   }
 
   /**
-   * Lists all feature flags
-   * @returns Readonly copy of all flags
+   * Lists all feature flags.
+   * @returns Readonly copy of all flags.
    */
   listFlags(): Readonly<Record<T, FeatureFlagValue>> {
-    return this.flags;
+    return { ...this.flags };
   }
 
   /**
-   * Updates a feature flag value
-   * @param flagName - Name of the flag to update
-   * @param value - New flag value
+   * Updates a feature flag value.
+   * @param flagName - Name of the flag to update.
+   * @param value - New flag value.
    */
   updateFlag(flagName: T, value: FeatureFlagValue): void {
-    this.flags[flagName] = value;
+    this.flags[flagName] = { ...value };
   }
 
   /**
-   * Deletes a feature flag
-   * @param flagName - Name of the flag to delete
+   * Deletes a feature flag.
+   * @param flagName - Name of the flag to delete.
    */
   deleteFlag(flagName: T): void {
     delete this.flags[flagName];
   }
 
   /**
-   * Sets global context for feature flag evaluation
-   * @param context - Context data to set globally
+   * Sets global context for feature flag evaluation.
+   * @param context - Context data to set globally.
    */
   setGlobalContext(context: FeatureFlagContextData): void {
     this.globalContext = { ...context };
   }
 
   /**
-   * Retrieves the current global context
-   * @returns Readonly copy of global context
+   * Retrieves the current global context.
+   * @returns Readonly copy of global context.
    */
   getGlobalContext(): Readonly<FeatureFlagContextData> {
     return { ...this.globalContext };
   }
 
   /**
-   * Evaluates if a feature flag is enabled for given context
-   * @param flagName - Name of the flag to evaluate
-   * @param userContext - Optional user-specific context
-   * @returns Boolean indicating if feature is enabled
+   * Evaluates if a feature flag is enabled for given context.
+   * @param flagName - Name of the flag to evaluate.
+   * @param userContext - Optional user-specific context.
+   * @returns Boolean indicating if the feature is enabled.
    */
-  isEnabled(flagName: T, userContext?: UserContextData): boolean {
+  isEnabled(flagName: T, userContext?: FeatureFlagContextData): boolean {
     const flag = this.getFlag(flagName);
-    if (!flag) {
-      console.warn(`[FeatureFlags] Flag "${String(flagName)}" not found.`);
-      return false;
-    }
-
     const context = {
       ...this.globalContext,
       ...userContext,
     };
 
-    // First, evaluate if the context matches
-    if (!this.evaluateContext(flag.context, context)) return false;
+    if (!flag) {
+      if (context.environment !== 'production') {
+        throw new Error(`Feature flag "${flagName}" not found.`);
+      } else {
+        console.warn(`[FeatureFlags] Flag "${String(flagName)}" not found.`);
+        return false;
+      }
+    }
 
-    // Then, evaluate the percentage-based rollout
-    const isPercentageMatch = this.evaluatePercentage(flag, context, flagName);
-    if (isPercentageMatch !== null) return isPercentageMatch;
+    if (typeof flag.customEvaluator === 'function') {
+      return flag.customEvaluator(flag, context);
+    }
 
-    // If no specific conditions apply, return the default value
+    if (flag.conditions && !this.evaluateConditions(flag.conditions, context)) {
+      return false;
+    }
+
+    const rolloutResult = this.evaluateRollout(flag, context, flagName);
+    if (rolloutResult !== null) {
+      return rolloutResult;
+    }
+
     return flag.defaultValue;
   }
 
   /**
-   * Evaluates if context matches flag requirements
-   * @param flagContext - Context requirements from flag
-   * @param context - Current context to evaluate
-   * @returns Boolean indicating if context matches
+   * Checks if the provided context meets the flag's conditions.
+   * @param conditions - Conditions defined in the flag.
+   * @param context - Evaluation context with merged data.
+   * @returns Boolean indicating if all conditions match.
    */
-  private evaluateContext(
-    flagContext: FeatureFlagContextData,
+  private evaluateConditions(
+    conditions: Partial<FeatureFlagContextData>,
     context: FeatureFlagContextData
   ): boolean {
-    for (const [key, value] of Object.entries(flagContext ?? {})) {
+    for (const [key, value] of Object.entries(conditions)) {
       if (key === 'percentage') continue;
       if (value !== undefined && context[key] !== value) {
         return false;
@@ -118,33 +127,33 @@ class FeatureFlags<T extends string> implements IFeatureFlags<T> {
   }
 
   /**
-   * Evaluates percentage-based rollout for a flag
-   * @param flag - Flag to evaluate
-   * @param context - Current context
-   * @param flagName - Name of the flag
-   * @returns Boolean if percentage applies, null otherwise
+   * Evaluates percentage-based rollout.
+   * @param flag - Flag configuration.
+   * @param context - Evaluation context.
+   * @param flagName - Name of the flag.
+   * @returns Boolean if percentage rollout applies, null otherwise.
    */
-  private evaluatePercentage(
+  private evaluateRollout(
     flag: FeatureFlagValue,
     context: FeatureFlagContextData,
     flagName: T
   ): boolean | null {
-    if (flag.context?.percentage !== undefined && context.userId) {
+    if (flag.rollout?.percentage !== undefined && context.userId) {
       return (
         this.assignUserToBucket(context.userId, flagName) <
-        flag.context.percentage
+        flag.rollout.percentage
       );
     }
     return null;
   }
 
   /**
-   * Assigns a user to a percentage bucket for rollouts
-   * @param userId - User identifier
-   * @param flagName - Name of the flag
-   * @returns Number between 0-99 representing user's bucket
+   * Assigns a user to a percentage bucket for rollout.
+   * @param userId - User identifier.
+   * @param flagName - Flag name.
+   * @returns Number between 0-99 representing the user's bucket.
    */
-  private assignUserToBucket(userId: string, flagName: T): number {
+  public assignUserToBucket(userId: string, flagName: T): number {
     return hash(userId + String(flagName)) % 100;
   }
 }
